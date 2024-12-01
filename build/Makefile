@@ -10,6 +10,7 @@ linux:
 install:
 	env CGO_ENABLED=0 GO111MODULE=on go build -v -o $(CMD_NAME) $(PWD)/main.go
 	chmod +x $(CMD_NAME)
+	echo "sudo mv ./cf /usr/local/bin"
 
 clean:
 	rm -rf $(CMD_NAME)
