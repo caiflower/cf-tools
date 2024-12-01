@@ -37,8 +37,9 @@ func NewCreateCommand() *cobra.Command {
 			path := project.Path
 			// 优先使用path
 			if project.Path == "" && project.URL != "" {
-				if output, err := RunCommand("git", []string{"clone", project.URL, "-b", project.Branch}, ""); err != nil {
-					fmt.Println(err.Error() + "-" + output)
+				fmt.Printf("git clone %s -b %s \n", project.URL, project.Branch)
+				if err := RunCommand("git", []string{"clone", project.URL, "-b", project.Branch}, ""); err != nil {
+					fmt.Println(err.Error())
 					return
 				}
 
@@ -53,34 +54,44 @@ func NewCreateCommand() *cobra.Command {
 
 			splits1 := strings.Split(path, "/")
 			parentPath := strings.TrimSuffix(path, splits1[len(splits1)-1])
+			fmt.Println("rename project")
 			if err := os.Rename(path, parentPath+"/"+projectName); err != nil {
 				fmt.Println(err.Error())
 				return
 			}
 
-			if output, err := RunCommand("rm", []string{"-rf", ".git"}, parentPath+"/"+projectName); err != nil {
-				fmt.Println(err.Error() + "-" + output)
+			if err := RunCommand("rm", []string{"-rf", ".git"}, parentPath+"/"+projectName); err != nil {
+				fmt.Println(err.Error())
 				return
 			}
-			if output, err := RunCommand("go", []string{"mod", "tidy"}, parentPath+"/"+projectName); err != nil {
-				fmt.Println(err.Error() + "-" + output)
+
+			fmt.Println("git mod tidy")
+			if err := RunCommand("go", []string{"mod", "tidy"}, parentPath+"/"+projectName); err != nil {
+				fmt.Println(err.Error())
 				return
 			}
-			if output, err := RunCommand("git", []string{"init"}, parentPath+"/"+projectName); err != nil {
-				fmt.Println(err.Error() + "-" + output)
+
+			fmt.Println("git init")
+			if err := RunCommand("git", []string{"init"}, parentPath+"/"+projectName); err != nil {
+				fmt.Println(err.Error())
 				return
 			}
-			if output, err := RunCommand("git", []string{"add", "."}, parentPath+"/"+projectName); err != nil {
-				fmt.Println(err.Error() + "-" + output)
+
+			fmt.Println("git add .")
+			if err := RunCommand("git", []string{"add", "."}, parentPath+"/"+projectName); err != nil {
+				fmt.Println(err.Error())
 				return
 			}
-			if output, err := RunCommand("git", []string{"commit", "-m", "init"}, parentPath+"/"+projectName); err != nil {
-				fmt.Println(err.Error() + "-" + output)
+
+			fmt.Println("git commit -m 'init'")
+			if err := RunCommand("git", []string{"commit", "-m", "init"}, parentPath+"/"+projectName); err != nil {
+				fmt.Println(err.Error())
 				return
 			}
+
 			if project.GitOrigin != "" {
-				if output, err := RunCommand("git", []string{"remote", "add", "origin", project.GitOrigin}, parentPath+"/"+projectName); err != nil {
-					fmt.Println(err.Error() + "-" + output)
+				if err := RunCommand("git", []string{"remote", "add", "origin", project.GitOrigin}, parentPath+"/"+projectName); err != nil {
+					fmt.Println(err.Error())
 					return
 				}
 			}
@@ -148,11 +159,32 @@ func ExecTemplateGetBytes(path string, dataMap map[string]interface{}) ([]byte, 
 	return objBuff.Bytes(), nil
 }
 
-func RunCommand(command string, args []string, dir string) (output string, err error) {
-	c := exec.Command(command, args...)
-	c.Dir = dir
-	err = c.Run()
-	_bytes, _ := c.CombinedOutput()
-	output = string(_bytes)
+func RunCommand(command string, args []string, dir string) (err error) {
+	cmd := exec.Command(command, args...)
+	cmd.Dir = dir
+	stdout, err := cmd.StdoutPipe()
+	cmd.Stderr = cmd.Stdout
+
+	if err != nil {
+		return
+	}
+
+	if err = cmd.Start(); err != nil {
+		return
+	}
+	// 从管道中实时获取输出并打印到终端
+	for {
+		tmp := make([]byte, 1024)
+		_, err := stdout.Read(tmp)
+		fmt.Print(string(tmp))
+		if err != nil {
+			break
+		}
+	}
+
+	if err = cmd.Wait(); err != nil {
+		return
+	}
+
 	return
 }
