@@ -73,13 +73,13 @@ git commit -m 'init'
  create mode 100644 web/server.go
 ```
 
-![image-20250302205020429](/Users/lijinlong/workspace/cf-tools/images/image-20250302205020429.png)
+![image-20250302205020429](./images/image-20250302205020429.png)
 
 **应用启动**
 
-![image-20250302205105429](/Users/lijinlong/workspace/cf-tools/images/image-20250302205105429.png)
+![image-20250302205105429](./images/image-20250302205105429.png)
 
-![image-20250302205302587](/Users/lijinlong/workspace/cf-tools/images/image-20250302205302587.png)
+![image-20250302205302587](./images/image-20250302205302587.png)
 
 或者使用以下命令行发送http请求
 
