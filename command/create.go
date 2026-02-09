@@ -48,6 +48,7 @@ func NewCreateCommand() *cobra.Command {
 
 			dataMap := make(map[string]interface{})
 			dataMap["MODULE"] = project.Module
+			dataMap["PROJECT_NAME"] = projectName
 			if err := parse(path, dataMap); err != nil {
 				fmt.Println(err.Error())
 			}
